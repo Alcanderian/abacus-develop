@@ -97,7 +97,7 @@ void Gint::cal_gint(Gint_inout *inout)
 				}
 			}
 
-    		#pragma omp for
+    		#pragma omp for nowait
 #endif
             // entering the main loop of grid points
 			for(int grid_index = 0; grid_index < GlobalC::bigpw->nbxx; grid_index++)
@@ -227,16 +227,18 @@ void Gint::cal_gint(Gint_inout *inout)
                 }
 			}
 
-			#pragma omp critical(gint)
 			if(inout->job==Gint_Tools::job_type::force  || inout->job==Gint_Tools::job_type::force_meta)
 			{
-				if(inout->isforce)
+				#pragma omp critical(gint)
 				{
-					inout->fvl_dphi[0]+=fvl_dphi_thread;
-				}
-				if(inout->isstress)
-				{
-					inout->svl_dphi[0]+=svl_dphi_thread;
+					if(inout->isforce)
+					{
+						inout->fvl_dphi[0]+=fvl_dphi_thread;
+					}
+					if(inout->isstress)
+					{
+						inout->svl_dphi[0]+=svl_dphi_thread;
+					}
 				}
 			}
 #endif
