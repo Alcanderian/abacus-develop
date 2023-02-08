@@ -1133,9 +1133,6 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
     }
 
     // work space
-    double* aux = new double[ndm];
-    ModuleBase::GlobalFunc::ZEROS(aux, ndm);
-
     double* rhocgnt = new double[rho_basis->ngg];
     ModuleBase::GlobalFunc::ZEROS(rhocgnt, rho_basis->ngg);
 
@@ -1151,9 +1148,13 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
     {
         //		Here we compute the G.ne.0 term
         const int mesh = GlobalC::ucell.atoms[nt].ncpp.msh;
-
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (int ig = igg0; ig < rho_basis->ngg; ++ig)
         {
+            double* aux = new double[ndm];
+            ModuleBase::GlobalFunc::ZEROS(aux, ndm);
             const double gx = sqrt(rho_basis->gg_uniq[ig]) * GlobalC::ucell.tpiba;
             for (int ir = 0; ir < mesh; ir++)
             {
@@ -1168,6 +1169,7 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
                 }
             }
             ModuleBase::Integral::Simpson_Integral(mesh, aux, GlobalC::ucell.atoms[nt].ncpp.rab, rhocgnt[ig]);
+            delete[] aux; // mohan fix bug 2012-03-22
         }
 
         int iat = 0;
@@ -1179,7 +1181,9 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
                 {
                     const ModuleBase::Vector3<double> pos = GlobalC::ucell.atoms[it].tau[ia];
                     double &force0 = forcescc(iat, 0), &force1 = forcescc(iat, 1), &force2 = forcescc(iat, 2);
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:force0) reduction(+:force1) reduction(+:force2)
+#endif
                     for (int ig = 0; ig < rho_basis->npw; ++ig)
                     {
                         if (ig == ig0)
@@ -1206,7 +1210,6 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
     Parallel_Reduce::reduce_double_pool(forcescc.c, forcescc.nr * forcescc.nc);
 
     delete[] psic; // mohan fix bug 2012-03-22
-    delete[] aux; // mohan fix bug 2012-03-22
     delete[] rhocgnt; // mohan fix bug 2012-03-22
 
     ModuleBase::timer::tick("Forces", "cal_force_scc");
