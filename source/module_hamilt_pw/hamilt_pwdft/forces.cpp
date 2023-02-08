@@ -1164,7 +1164,7 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
                 else
                 {
                     const double gxx = gx * GlobalC::ucell.atoms[nt].ncpp.r[ir];
-                    aux[ir] = GlobalC::ucell.atoms[nt].ncpp.rho_at[ir] * sin(gxx) / gxx;
+                    aux[ir] = GlobalC::ucell.atoms[nt].ncpp.rho_at[ir] * ModuleBase::libm::sin(gxx) / gxx;
                 }
             }
             ModuleBase::Integral::Simpson_Integral(mesh, aux, GlobalC::ucell.atoms[nt].ncpp.rab, rhocgnt[ig]);
