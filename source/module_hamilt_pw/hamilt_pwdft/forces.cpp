@@ -1153,8 +1153,7 @@ void Forces<FPTYPE, Device>::cal_force_scc(ModuleBase::matrix& forcescc, ModuleP
 #endif
         for (int ig = igg0; ig < rho_basis->ngg; ++ig)
         {
-            double* aux = new double[ndm];
-            ModuleBase::GlobalFunc::ZEROS(aux, ndm);
+            double* aux = new double[mesh];
             const double gx = sqrt(rho_basis->gg_uniq[ig]) * GlobalC::ucell.tpiba;
             for (int ir = 0; ir < mesh; ir++)
             {
